@@ -20,8 +20,10 @@ from math import sqrt, cos, sin, pi, cosh
 #argParser.add_argument('--small',       action='store_true',                                                                        help="Run the file on a small sample (for test purpose), bool flag set to True if used" )
 #args = argParser.parse_args()
 
+import numpy as np
 import uproot
 import awkward as ak
+import uproot_methods.classes.TLorentzVector
 
 # Open ROOT file and get the Events tree
 file_path = "/eos/vbc/experiments/cms/store/data/Run2018D/DoubleMuon/NANOAOD/UL2018_MiniAODv2_NanoAODv9-v2/2430000/04942A65-FE75-0743-B0F9-87E3E249D7C3.root"
@@ -41,29 +43,60 @@ with uproot.open(file_path) as file:
     data = tree.arrays(branches, library="ak")
 
     # Apply selection criteria (string-based)
-    selection = ak.sum((data["Muon_pt"] > 5) & (data["Muon_mediumPromptId"] == 1), axis=1) >= 4
+    selection = ak.sum((data["Muon_pt"] > 5) & (data["Muon_mediumPromptId"] == 1), axis=1) == 2
+    obj_selection = (data["Muon_pt"] > 5) & (data["Muon_mediumPromptId"] == 1)
+    
+        # Def 4 momentum 
+def four_momentum(pt,eta,phi):
+    p_0 = pt * np.cosh(eta)
+    p_1 = pt * np.cos(phi)
+    p_2 = pt * np.sin(phi)
+    p_3 = pt * np.sinh(eta)
+    return np.array([p_0,p_1,p_2,p_3])
+
+def minkowski_product(p1,p2):
+    return  -p1[0] * p2[0] + np.dot(p1[1:],p2[1:])
+
+def inv_mass(p1,p2):
+    mass_squared = 2 * minkowski_product(p1,p2)
+    return np.sqrt(mass_squared)
 
     # Loop over selected events and access muon information
-    for i_event in range(len(data["Muon_pt"])):
+for i_event in range(len(data["Muon_pt"])):
+
+        print(f"Event pre: {i_event}")
+
         if not selection[i_event]:
             continue
 
         print(f"Event {i_event}:")
 
-        muon_pts = data["Muon_pt"][i_event]
-        muon_etas = data["Muon_eta"][i_event]
-        muon_phis = data["Muon_phi"][i_event]
-        muon_charges = data["Muon_charge"][i_event]
-        muon_mediumPromptIds = data["Muon_mediumPromptId"][i_event]
+        muon_pts = data["Muon_pt"][obj_selection][i_event]
+        muon_etas = data["Muon_eta"][obj_selection][i_event]
+        muon_phis = data["Muon_phi"][obj_selection][i_event]
+        muon_charges = data["Muon_charge"][obj_selection][i_event]
+        muon_mediumPromptIds = data["Muon_mediumPromptId"][obj_selection][i_event]
 
-        n_muons = len(muon_pts)
+        n_muons = len(muon_pts) # ist gleich anzahl der gesuchten muonen pro event
+        muon_4vecs = [four_momentum(muon_pts[i], muon_etas[i], muon_phis[i]) for i in range(n_muons)]
+        print(muon_4vecs)
+        print(f"mproduct test: {minkowski_product(muon_4vecs[0],muon_4vecs[0])}")
+        print(f"invmass test: {inv_mass(muon_4vecs[0],muon_4vecs[1])}")
+        for i in range(n_muons):
+            for j in range(i + 1, n_muons):
+                m_inv = inv_mass(muon_4vecs[i], muon_4vecs[j])
+                print(f"Invariant Mass of muon pair ({i},{j}): {m_inv}:")
+
 
         for i_muon in range(n_muons):
             print(f"  Muon {i_muon}: pt={muon_pts[i_muon]}, eta={muon_etas[i_muon]}, phi={muon_phis[i_muon]}, "
                   f"charge={muon_charges[i_muon]}, mediumPromptId={muon_mediumPromptIds[i_muon]}")
+            print(f" four momentum {i_muon}:{four_momentum(muon_pts[i_muon],muon_etas[i_muon], muon_phis[i_muon])}")
+
+         
 
         # Example: break after 5 events for brevity
-        if i_event >= 4:
+        if i_event >= 20:
             break
 
 #def makeM4l(event, sample):
