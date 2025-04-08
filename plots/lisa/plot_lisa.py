@@ -43,7 +43,7 @@ def inv_mass_funct(p1,p2):
 
 
 #Define a ROOT histogram
-h = TH1D('h','', 50,0,200)
+h = TH1D('h','', 100,0,200)
 
 # Open ROOT file and get the Events tree
 file_path = "/eos/vbc/experiments/cms/store/data/Run2018D/DoubleMuon/NANOAOD/UL2018_MiniAODv2_NanoAODv9-v2/2430000/04942A65-FE75-0743-B0F9-87E3E249D7C3.root"
@@ -109,7 +109,7 @@ with uproot.open(file_path) as file:
         n_muons = len(muon_pts)
 
         ##Philipp's code:
-        #It gives nan and it does not work if muon vector has 
+        ## 
         if n_muons>1:
             muon_4vecs = [four_momentum(muon_pts[i], muon_etas[i], muon_phis[i]) for i in range(n_muons)]
             print(muon_4vecs)
@@ -180,14 +180,13 @@ with uproot.open(file_path) as file:
         ##if (mass!=None) or (ak.num(mass,axis=0)!=0):
 
         # Example: break after 5 events for brevity
-        if i_event >= 5:
+        if i_event >= 5000:
             break
 
     print("Filled histo")
     gROOT.SetBatch(True)
     #gStyle.SetOptStat(0)
 
-    '''
     #Draw a canvas
     c1 = TCanvas("c1", "inv_mass", 900, 675)
     c1.cd()
@@ -198,7 +197,6 @@ with uproot.open(file_path) as file:
     c1.Print("inv_mass.pdf")
     c1.Print("inv_mass.png")
     c1.Close()
-    '''
     #Write histogram in a root file
 
 
