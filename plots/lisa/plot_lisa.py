@@ -5,7 +5,7 @@
 # Standard imports and batch mode
 #
 #import ROOT
-from ROOT import gROOT, TH1, TH1D, TCanvas, TLegend, gStyle
+from ROOT import gROOT, TH1, TH1D, TCanvas, TLegend, gStyle, TFile
 from math import sqrt, cos, sin, pi, cosh
 #from RootTools.core.standard import *
 
@@ -180,7 +180,7 @@ with uproot.open(file_path) as file:
         ##if (mass!=None) or (ak.num(mass,axis=0)!=0):
 
         # Example: break after 5 events for brevity
-        if i_event >= 5000:
+        if i_event >= 50:#00:
             break
 
     print("Filled histo")
@@ -197,8 +197,15 @@ with uproot.open(file_path) as file:
     c1.Print("inv_mass.pdf")
     c1.Print("inv_mass.png")
     c1.Close()
-    #Write histogram in a root file
 
+    #Write histogram in a root file
+    #Warning! use a different label to avoid overwriting
+    label = "_test"
+    outfile = TFile("inv_mass"+label+".root","RECREATE")
+    outfile.cd()
+    h.Write("h")
+    outfile.Close()
+    print("Written ","inv_mass"+label+".root")
 
 
 
