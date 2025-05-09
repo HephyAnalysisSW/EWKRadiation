@@ -1,0 +1,158 @@
+Metrik = np.array([[-1, 0, 0, 0],
+                   [0, 1, 0, 0],
+                   [0, 0, 1, 0],
+                   [0, 0, 0, 1]])
+
+# Funktion zur Berechnung des 4-Impulses
+def calculate_momentum(pt, eta, phi):
+    p_0 = np.cosh(eta)
+    p_1 = np.cos(phi)
+    p_2 = np.sin(phi)
+    p_3 = np.sinh(eta)
+    return pt * np.array([p_0, p_1, p_2, p_3])
+
+# Daten aus einer Event-Analyse laden (angenommen, 'data' existiert bereits)
+muon_pts = data["Muon_pt"][obj_selection][i_event]
+muon_etas = data["Muon_eta"][obj_selection][i_event]
+muon_phis = data["Muon_phi"][obj_selection][i_event]
+muon_charges = data["Muon_charge"][obj_selection][i_event]
+
+n_muons = len(muon_pts)  # Anzahl der Muonen bestimmen
+
+# Durch alle Muonen iterieren und den 4-Impuls berechnen
+for i_muon in range(n_muons):
+    momentum = calculate_momentum(muon_pts[i_muon], muon_etas[i_muon], muon_phis[i_muon])
+    print(f"Momentum {i_muon}: {momentum}")
+#!/usr/bin/env python
+''' simple analysis script 
+'''
+#
+# Standard imports and batch mode
+#
+#import ROOT
+#ROOT.gROOT.SetBatch(True)
+from math import sqrt, cos, sin, pi, cosh
+#from RootTools.core.standard import *
+
+# Maybe we do this later 
+#from EWKRadiation.tools.user import plot_directory
+#from EWKRadiation.tools.objectSelection import getGoodMuons, alwaysTrue
+
+#import argparse
+#argParser = argparse.ArgumentParser(description = "Argument parser")
+#argParser.add_argument('--logLevel',       action='store',      default='INFO',      nargs='?', choices=['CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'TRACE', 'NOTSET'], help="Log level for logging")
+#argParser.add_argument('--plot_directory', action='store',      default='FourMuonInvariantMass')
+#argParser.add_argument('--small',       action='store_true',                                                                        help="Run the file on a small sample (for test purpose), bool flag set to True if used" )
+#args = argParser.parse_args()
+
+import numby as np
+import uproot
+import awkward as ak
+
+# Open ROOT file and get the Events tree
+file_path = "/eos/vbc/experiments/cms/store/data/Run2018D/DoubleMuon/NANOAOD/UL2018_MiniAODv2_NanoAODv9-v2/2430000/04942A65-FE75-0743-B0F9-87E3E249D7C3.root"
+with uproot.open(file_path) as file:
+    tree = file["Events"]
+
+    # Define branches to read (extend this list later as needed)
+    branches = [
+        "Muon_pt",
+        "Muon_eta",
+        "Muon_phi",
+        "Muon_charge",
+        "Muon_mediumPromptId"
+    ]
+
+    # Read branches
+    data = tree.arrays(branches, library="ak")
+
+    # Apply selection criteria (string-based)
+    selection = ak.sum((data["Muon_pt"] > 5) & (data["Muon_mediumPromptId"] == 1), axis=1) == 2
+    obj_selection = (data["Muon_pt"] > 5) & (data["Muon_mediumPromptId"] == 1)
+    print(data["Muon_pt"])
+    print( (data["Muon_pt"] > 5) & (data["Muon_mediumPromptId"] == 1))
+    print(ak.sum(data["Muon_pt"] > 5, axis=1))
+    print(ak.sum( (data["Muon_pt"] > 5) & (data["Muon_mediumPromptId"] == 1) , axis=1))
+    print(selection)
+    print(obj_selection)
+
+    # Loop over selected events and access muon information
+    for i_event in range(len(data["Muon_pt"])):
+
+        print(f"Event pre: {i_event}")
+
+        if not selection[i_event]:
+            continue
+
+        print(f"Event {i_event}:")
+
+        muon_pts = data["Muon_pt"][obj_selection][i_event]
+        muon_etas = data["Muon_eta"][obj_selection][i_event]
+        muon_phis = data["Muon_phi"][obj_selection][i_event]
+        muon_charges = data["Muon_charge"][obj_selection][i_event]
+        muon_mediumPromptIds = data["Muon_mediumPromptId"][obj_selection][i_event]
+
+        n_muons = len(muon_pts)
+
+        for i_muon in range(n_muons):
+            print(f"  Muon {i_muon}: pt={muon_pts[i_muon]}, eta={muon_etas[i_muon]}, phi={muon_phis[i_muon]}, "
+                  f"charge={muon_charges[i_muon]}, mediumPromptId={muon_mediumPromptIds[i_muon]}")
+        
+        #Calculate invariant mass
+        metrik = np.array([[-1,0,0,0],
+                           [0,1,0,0],
+                           [0,0,1,0],
+                           [0,0,0,1]])
+
+        def calculate_momentum(pt, eta, phi)
+           p_0 = np.cosh(eta)
+           p_1 = np.cos(phi)
+           p_2 = np.sin(phi)
+           p_3 = np.sinh(eta)
+
+           return pt * np.array([p_0, p_1, p_2, p_3])
+        
+        
+
+# Metrik-Tensor f
+            Print(f" Momentum {i_muon}: calculate_momentum({muon_pts[i_muon]},{muon_etas[i_muon]},{muon_phis[i_muon]}")
+
+
+        muon_pts = data["Muon_pt"][obj_selection][i_event]
+        muon_etas = data["Muon_eta"][obj_selection][i_event]
+        muon_phis = data["Muon_phi"][obj_selection][i_event]
+        muon_charges = data["Muon_charge"][obj_selection][i_event]
+        
+        
+
+        for i_event in range(len(muon_pts)):
+            2 *  muon_pts[0] * muon[1]*  
+
+        for i muon in range (n_muons):
+            
+            
+        
+        # Example: break after 5 events for brevity
+        if i_event >= 20:
+            break
+
+#def makeM4l(event, sample):
+#
+#    # Get muons
+#    muons      = getGoodMuons(event, collVars = muVars, mu_selector = lambda m:m['pt']>10 and m['mediumPromptId'] and m["pfRelIso03_all"]<0.3 )
+#
+#    event.m4l = float('nan')
+#    m4l2 = 0
+#    if len( muons ) ==4:
+#
+#        # select 2 positive and 2 negative charges
+#        pdgIds = [ p['pdgId'] for p in muons ]
+#        if pdgIds.count(+13) == 2 and pdgIds.count(-13)==2:
+#            for i in range(1,4):
+#                for j in range( i ):
+#                    #print "indices i=%i,j=%i: adding %d to m4l2 => yiels %d" % (i,j,m4l2summand,m4l2)
+#                    m4l2 += 27. #FIXME: Rosmarie. 
+#
+#    event.m4l = sqrt( m4l2 )
+#    print "%d = invariant mass of 4 muons (2 pos, 2 neg)" % event.m4l
+#

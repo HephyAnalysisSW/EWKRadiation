@@ -86,11 +86,19 @@ with uproot.open(file_path) as file:
 
     # Read branches
     data = tree.arrays(branches, library="ak")
+    
+    
 
 
     # Apply selection criteria (string-based)
-    obj_selection = ((data["Muon_pt"] > 5) & (data["Muon_mediumPromptId"] == 1) )
-    selection = ak.sum((data["Muon_pt"] > 5) & (data["Muon_mediumPromptId"] == 1), axis=1) == 2
+    selection = ak.sum((data["Muon_pt"] > 5) & (data["Muon_mediumPromptId"] == 1), axis=1) >=2 # this should be >=2
+    selected_data = data[selection]
+    
+    obj_selection = ((selected_data["Muon_pt"] > 5) & (selected_data["Muon_mediumPromptId"] == 1) )
+    
+    print("Total number of events in file:", len(data))
+    print("Number of selected events in file:", len(selected_data))
+    
     
     '''
     ##Option 1:
@@ -121,22 +129,18 @@ with uproot.open(file_path) as file:
     masses_closeZ = []
     masses_in_window = []
 
+    selected_event = []
+    sorted_out = []
     # Loop over selected events and access muon information
-    for i_event in range(len(data["Muon_pt"])):
-        if not selection[i_event]:
-            continue
+    for i_event in range(len(selected_data["Muon_pt"])):
         
-        total_charge = ak.sum(data["Muon_charge"][obj_selection][i_event]) #obj selection gibt mir True/False je nachdem welches muon pro event ich anschaue
-        if total_charge != 0:
-            continue
-
         print(f"Event {i_event}:")
 
-        muon_pts = data["Muon_pt"][obj_selection][i_event]
-        muon_etas = data["Muon_eta"][obj_selection][i_event]
-        muon_phis = data["Muon_phi"][obj_selection][i_event]
-        muon_charges = data["Muon_charge"][obj_selection][i_event]
-        muon_mediumPromptIds = data["Muon_mediumPromptId"][obj_selection][i_event]
+        muon_pts = selected_data["Muon_pt"][obj_selection][i_event]
+        muon_etas = selected_data["Muon_eta"][obj_selection][i_event]
+        muon_phis = selected_data["Muon_phi"][obj_selection][i_event]
+        muon_charges = selected_data["Muon_charge"][obj_selection][i_event]
+        muon_mediumPromptIds = selected_data["Muon_mediumPromptId"][obj_selection][i_event]
 
         n_muons = len(muon_pts)
        
@@ -148,27 +152,35 @@ with uproot.open(file_path) as file:
         ##Option 2:
         ##Form a Lorentz vector, one for each muon, but looking at one event at a time
         t_vec = ak.zip({
-            "pt" : data["Muon_pt"][obj_selection][i_event],
-            "phi" : data["Muon_phi"][obj_selection][i_event],
-            "eta" : data["Muon_eta"][obj_selection][i_event],
-            "mass" : data["Muon_charge"][obj_selection][i_event]*0,
+            "pt" : selected_data["Muon_pt"][obj_selection][i_event],
+            "phi" : selected_data["Muon_phi"][obj_selection][i_event],
+            "eta" : selected_data["Muon_eta"][obj_selection][i_event],
+            "mass" : selected_data["Muon_charge"][obj_selection][i_event]*0,
         }, with_name="Momentum4D")
         
         print(t_vec)
         #print(ak.num(t_vec,axis=0))#this time I need axis=0, since there is only one dimension (number of muons)
-        pair_combinations = ak.combinations(t_vec, 4, axis=0)
-        idx_pair_combinations = ak.argcombinations(t_vec, 4, axis=0)
+        pair_combinations = ak.combinations(t_vec, 2, axis=0)
+        idx_pair_combinations = ak.argcombinations(t_vec, 2, axis=0)
 
         #combinations total charge = 0
-        charges_sum = muon_charges[idx_pair_combinations["0"]] + muon_charges[idx_pair_combinations["1"]] + muon_charges[idx_pair_combinations["2"]] + muon_charges[idx_pair_combinations["3"]]
+        charges_sum = muon_charges[idx_pair_combinations["0"]] + muon_charges[idx_pair_combinations["1"]] # + muon_charges[idx_pair_combinations["2"]] + muon_charges[idx_pair_combinations["3"]]
         mask = charges_sum == 0
 
+        if ak.sum(mask) == 0:
+            #sorted_out.append({i_event : valid_pairs})
+            print("Total charge criteria not fullfilled")
+            continue
+        
         valid_pairs = pair_combinations[mask]
         idx_valid_pairs = idx_pair_combinations[mask]
 
-        inv_mass = ak.Array([(pair['0'] + pair['1'] + pair["2"] + pair["3"]).mass for pair in valid_pairs])
+        inv_mass = ak.Array([(pair['0'] + pair['1']).mass for pair in valid_pairs])
         
-
+        selected_event.append({i_event : valid_pairs})
+      
+        
+        
 
         ##No selections on the invariant masses
         print(f"  Invariant mass combinations per valid event: ",inv_mass)
@@ -176,7 +188,6 @@ with uproot.open(file_path) as file:
         mass_all = np.array(inv_mass).flatten()
         masses_all.extend(mass_all) #h1   
         #print(mass)
-
         ##If I can form more than one combination, I want the pair giving the closest invariant mass to the Z boson (91 GeV)
         best_pair = np.argmin( np.abs(inv_mass - 91) )
         print(f"  Best invariant mass combination: ",inv_mass[best_pair])
@@ -199,17 +210,20 @@ with uproot.open(file_path) as file:
         ##if (mass!=None) or (ak.num(mass,axis=0)!=0):
 
         # Example: break after 5 events for brevity
-        if i_event >= 100:
+        if i_event >= 500:
             break
+        
+    print(sum(len(v) for event in selected_event for v in event.values()))
+    print(selected_event)
 
     h1 = create_histogram(masses_all, "h1", 100, 0, 200, "masses_all")
     h2 = create_histogram(masses_closeZ, "h2", 100, 0, 200, "masses_closeZ")
     h3 = create_histogram(masses_in_window, "h3", 100, 0, 200, "masses_in_window")
 
-    print(f"Collected Mass for h1: {masses_all}")
-    print(f"Collected Mass for h2: {masses_closeZ}")
-    print(f"Collected Mass for h3: {masses_in_window}")
-    print("Filled histo")
+    #print(f"Collected Mass for h1: {masses_all}")
+    #print(f"Collected Mass for h2: {masses_closeZ}")
+    #print(f"Collected Mass for h3: {masses_in_window}")
+    #print("Filled histo")
     gROOT.SetBatch(True)
     #gStyle.SetOptStat(0)
     
@@ -240,12 +254,6 @@ with uproot.open(file_path) as file:
     c1.Print("inv_mass_compare.png")
     c1.Close()
     
-    import os
-
-    os.system("open inv_massno_selec.pdf")
-    os.system("open inv_massclose_to_Z.pdf")
-    os.system("open inv_masswindow_selec.pdf")
-    os.system("open inv_mass_compare.pdf")
 
 
 
