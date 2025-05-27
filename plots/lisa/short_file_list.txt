@@ -1,0 +1,2 @@
+/eos/vbc/experiments/cms/store/data/Run2018D/DoubleMuon/NANOAOD/UL2018_MiniAODv2_NanoAODv9-v2/2430000/100D8FC0-8587-2146-A168-410007F1DFAE.root
+/eos/vbc/experiments/cms/store/data/Run2018D/DoubleMuon/NANOAOD/UL2018_MiniAODv2_NanoAODv9-v2/2430000/10B35369-7C64-3640-B0A5-6E12AEDEA06B.root
