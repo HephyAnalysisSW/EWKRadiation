@@ -56,16 +56,16 @@ with uproot.open(file_path) as file:
         "Muon_eta",
         "Muon_phi",
         "Muon_charge",
-        "Muon_mediumPromptId"
+        "Muon_mediumPromptId",
+        "Muon_pfRelIso04_all"
     ]
 
     # Read branches
     data = tree.arrays(branches, library="ak")
 
-
     # Apply selection criteria (string-based)
-    obj_selection = ((data["Muon_pt"] > 5) & (data["Muon_mediumPromptId"] == 1) )
-    selection = ak.sum((data["Muon_pt"] > 5) & (data["Muon_mediumPromptId"] == 1), axis=1) >= 2
+    obj_selection = ((data["Muon_pt"] > 5) & (data["Muon_mediumPromptId"] == 1) & (data["Muon_pfRelIso04_all"]<0.4) )
+    selection = ak.sum((data["Muon_pt"] > 5) & (data["Muon_mediumPromptId"] == 1) & (data["Muon_pfRelIso04_all"]<0.4), axis=1) >= 2
     
     '''
     ##Option 1:
