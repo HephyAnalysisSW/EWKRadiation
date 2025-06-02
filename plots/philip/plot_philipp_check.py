@@ -142,7 +142,7 @@ for n_muons in [2,4,6]:
     
 
     start_time = time.time()
-    inv_mass = ak.sum((valid_pairs[str(i)] for i in range(n_muons))).mass
+    inv_mass = ak.sum((valid_pairs[str(i)] for i in range(n_muons))).mass 
 
     print(inv_mass)
 
