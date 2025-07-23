@@ -59,24 +59,24 @@ def create_histogram(mass_values, hist_name, bins, x_min, x_max, file_name, hist
 
     return hist
 
-def process_file(file_path):
-    print(f"Processing file: {file_path}")
-    file_name_base = os.path.splitext(os.path.basename(file_path))[0] #basename gibt letzten /part
+def process_files(file_paths):
+    print(f"Processing batch of files: {file_paths}")
+    file_name_base = "batch" + str(abs(hash(",".join(file_paths)))) #basename gibt letzten /part
     
-    with uproot.open(file_path) as file:
-        tree = file["Events"]
-        branches = [
-            "Muon_pt",
-            "Muon_eta",
-            "Muon_phi",
-            "Muon_charge",
-            "Muon_mediumPromptId", #weniger fake myonen z.B aus Hadron zerfällen (gibt Boolean zurück)
-            "Muon_tightId", #noch strengere selection für muonen -> higgs 
-            "Muon_pfRelIso04_all" #not considering muon near jets
+    
+    branches = [
+        "Muon_pt",
+        "Muon_eta",
+        "Muon_phi",
+        "Muon_charge",
+        "Muon_mediumPromptId", #weniger fake myonen z.B aus Hadron zerfällen (gibt Boolean zurück)
+        "Muon_tightId", #noch strengere selection für muonen -> higgs 
+        "Muon_pfRelIso04_all" #not considering muon near jets
         ]
 
     # Read branches
-        data = tree.arrays(branches, library="ak") #Problem if i dont use entry stop
+    data = uproot.concatenate({f: "Events" for f in file_paths}, expressions=branches, library="ak")
+    print(f"Loaded {len(data)})events from {len(file_paths)}files")
     
 
 #file_path = "/eos/vbc/experiments/cms/store/data/Run2018D/DoubleMuon/NANOAOD/UL2018_MiniAODv2_NanoAODv9-v2/2430000/04942A65-FE75-0743-B0F9-87E3E249D7C3.root"
@@ -278,5 +278,8 @@ file_list = [
     "/eos/vbc/experiments/cms/store/data/Run2018B/DoubleMuon/NANOAOD/UL2018_MiniAODv2_NanoAODv9-v1/270000/E4B29848-0954-CA48-9123-9966DDE62D9A.root"
 ]
 
-for filepath in file_list:
-    process_file(filepath)
+batch_size = 4
+
+for i in range(0,len(file_list), batch_size):
+    batch = file_list[i:i + batch_size]
+    process_files(batch)
