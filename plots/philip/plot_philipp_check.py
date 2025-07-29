@@ -5,6 +5,7 @@
 # Standard imports and batch mode
 #
 #import ROOT
+import subprocess
 import time
 from ROOT import gROOT, TH1, TH1D, TCanvas, TLegend, gStyle, TFile
 from math import sqrt, cos, sin, pi, cosh
@@ -58,6 +59,44 @@ def create_histogram(mass_values, hist_name, bins, x_min, x_max, file_name, hist
     c.Close()
 
     return hist
+
+
+def merge_histograms_and_plot(n_muons):
+    pattern = f"hist_{n_muons}muon_batch"
+    merged_file = f"hist_{n_muons}muon_combined.root"
+    hist_name = f"h1_{n_muons}"
+
+    # Filter passende .root-Dateien
+    input_files = [f for f in os.listdir(".") if f.startswith(pattern) and f.endswith(".root")]
+    if not input_files:
+        print(f"No input files for {n_muons} muons.")
+        return
+
+    # Merge mit hadd
+    print(f"Merging: {input_files}")
+    subprocess.run(["hadd", "-f", merged_file] + input_files)
+
+    # Öffne gemergte Datei und zeichne Histogramm
+    file = TFile.Open(merged_file)
+    hist = file.Get(hist_name)
+
+    if hist:
+        c = TCanvas(f"c_combined_{n_muons}", f"{n_muons} Muons Combined", 900, 675)
+        c.cd()
+        hist.SetMarkerStyle(20)
+        hist.GetXaxis().SetTitle("Invariant mass (GeV)")
+        hist.GetYaxis().SetTitle("Events")
+        hist.Draw("PE")
+        c.Print(f"hist_{n_muons}muon_combined.pdf")
+        c.Print(f"hist_{n_muons}muon_combined.png")
+        c.Close()
+        print(f"Saved merged plots for {n_muons} muons.")
+    else:
+        print(f"Histogram {hist_name} not found in {merged_file}.")
+
+    file.Close()
+
+
 
 def process_files(file_paths):
     print(f"Processing batch of files: {file_paths}")
@@ -160,9 +199,11 @@ def process_files(file_paths):
         print("Number of entries:",len(mass_all)) 
         #best_pair = np.argmin( np.abs(inv_mass - 91) )
         
-        out_file_base = f"{file_name_base}_{n_muons}muon_mass_all"
+        out_file_base = f"hist_{n_muons}muon_batch{i}"  # i ist der Batch-Index
         create_histogram(mass_all, f"h1_{n_muons}", 100, 0, 200, out_file_base)
         print(f"Saved histogram for {n_muons} muons: {out_file_base}")
+        
+        
     
 #     print(ak.min(inv_mass,axis=1))
 #     print("diff")
@@ -283,3 +324,8 @@ batch_size = 4
 for i in range(0,len(file_list), batch_size):
     batch = file_list[i:i + batch_size]
     process_files(batch)
+    
+
+# Am Ende: Merged histos + PDFs + PNGs
+for n in [2, 4, 6]:
+    merge_histograms_and_plot(n)
