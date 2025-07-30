@@ -109,13 +109,18 @@ def process_files(file_paths):
         "Muon_phi",
         "Muon_charge",
         "Muon_mediumPromptId", #weniger fake myonen z.B aus Hadron zerfällen (gibt Boolean zurück)
-        "Muon_tightId", #noch strengere selection für muonen -> higgs 
-        "Muon_pfRelIso04_all" #not considering muon near jets
+        "Muon_highPtId", #noch strengere selection für muonen -> higgs 
+        "Muon_pfRelIso04_all", #not considering muon near jets
+        "Muon_pfRelIso03_all",
+        "HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass3p8",
+        "Muon_sip3d",
         ]
 
     # Read branches
     data = uproot.concatenate({f: "Events" for f in file_paths}, expressions=branches, library="ak")
     print(f"Loaded {len(data)})events from {len(file_paths)}files")
+    
+    hlt = data["HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass3p8"] == True
     
 
 #file_path = "/eos/vbc/experiments/cms/store/data/Run2018D/DoubleMuon/NANOAOD/UL2018_MiniAODv2_NanoAODv9-v2/2430000/04942A65-FE75-0743-B0F9-87E3E249D7C3.root"
@@ -128,11 +133,13 @@ def process_files(file_paths):
     for n_muons in [2,4,6]:
         # Apply selection criteria (string-based)
         #selection = ak.sum((data["Muon_pt"] > 5) & (data["Muon_mediumPromptId"] == 1), axis=1) >=2 # this should be >=2
-        selection = ak.sum((data["Muon_pt"] > 5) & (data["Muon_tightId"] == 1) & (data["Muon_pfRelIso04_all"]<0.4) , axis=1)  >= n_muons
-        selected_data = data[selection]
+        selection_all_muons = ak.sum((data["Muon_pt"] > 10) & (data["Muon_highPtId"] == 1) & (data["Muon_pfRelIso03_all"]<0.35) & (data["Muon_sip3d"]<4), axis=1)  >= n_muons
+        selection_leading_muon = ak.any((data["Muon_pt"] > 20) & (data["Muon_highPtId"] == 1) & (data["Muon_pfRelIso03_all"]<0.35) & (data["Muon_sip3d"]<4), axis=1)
+        combined_selection = selection_all_muons & selection_leading_muon & hlt
+        selected_data = data[combined_selection]
     
         #obj_selection = ((selected_data["Muon_pt"] > 5) & (selected_data["Muon_mediumPromptId"] == 1) )
-        obj_selection = ((selected_data["Muon_pt"] > 5) & (selected_data["Muon_tightId"] == 1) & (selected_data["Muon_pfRelIso04_all"]<0.4))
+        obj_selection = ((selected_data["Muon_pt"] > 10) & (selected_data["Muon_highPtId"] == 1) & (selected_data["Muon_pfRelIso03_all"]<0.35) &(selected_data["Muon_sip3d"]<4))
     
     #build t_vec already, based on selected_data, that filters away events with less than 2 good muons
     #Liste von Listen. Einträge gefüllt mit dictionary 
@@ -194,13 +201,18 @@ def process_files(file_paths):
 
         print(f"Time to compute invariant mass valid: {end_time - start_time:.4f} seconds")
 
+        inv_mass_cut = inv_mass >4
+        inv_mass_selected = ak.flatten(inv_mass[inv_mass_cut])
+        
+        
+        
         
         mass_all = ak.flatten(inv_mass) #h1  
-        print("Number of entries:",len(mass_all)) 
+        print("Number of entries:",len(inv_mass_selected)) 
         #best_pair = np.argmin( np.abs(inv_mass - 91) )
         
         out_file_base = f"hist_{n_muons}muon_batch{i}"  # i ist der Batch-Index
-        create_histogram(mass_all, f"h1_{n_muons}", 100, 0, 200, out_file_base)
+        create_histogram(inv_mass_selected, f"h1_{n_muons}", 100, 0, 200, out_file_base)
         print(f"Saved histogram for {n_muons} muons: {out_file_base}")
         
         
