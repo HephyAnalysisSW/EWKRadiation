@@ -1,0 +1,16 @@
+/eos/vbc/experiments/cms/store/data/Run2016B/DoubleMuon/NANOAOD/ver1_HIPM_UL2016_MiniAODv1_NanoAODv2-v1/230000:
+2734053A-1AA8-2244-BF1A-AFCE66B696A0.root
+354F45BF-ABE9-9445-B1D9-B652BCEE8E1C.root
+3D80A0A8-EBB1-A44B-BD70-416C956105CD.root
+7901082B-1C65-8342-899C-43E076A64444.root
+F3E35015-AB8D-D349-9E65-0ABBC45C18BC.root
+
+/eos/vbc/experiments/cms/store/data/Run2016B/DoubleMuon/NANOAOD/ver2_HIPM_UL2016_MiniAODv1_NanoAODv2-v1/230000:
+
+/eos/vbc/experiments/cms/store/data/Run2016B/DoubleMuon/NANOAOD/ver2_HIPM_UL2016_MiniAODv1_NanoAODv2-v1/2310000:
+
+/eos/vbc/experiments/cms/store/data/Run2016B/DoubleMuon/NANOAOD/ver2_HIPM_UL2016_MiniAODv2_NanoAODv9-v2/2520000:
+
+/eos/vbc/experiments/cms/store/data/Run2016B/DoubleMuon/NANOAOD/ver2_HIPM_UL2016_MiniAODv2_NanoAODv9-v2/2530000:
+
+/eos/vbc/experiments/cms/store/data/Run2016B/DoubleMuon/NANOAOD/ver2_HIPM_UL2016_MiniAODv2_NanoAODv9-v2/40000:

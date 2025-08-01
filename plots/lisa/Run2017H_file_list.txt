@@ -1,0 +1,3 @@
+/eos/vbc/experiments/cms/store/data/Run2017H/DoubleMuon/NANOAOD/UL2017_MiniAODv2_NanoAODv9-v1/270000/:
+
+/eos/vbc/experiments/cms/store/data/Run2017H/DoubleMuon/NANOAOD/UL2017_MiniAODv2_NanoAODv9-v1/280000/:
